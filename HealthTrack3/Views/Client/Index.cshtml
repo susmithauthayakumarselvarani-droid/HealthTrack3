@@ -1,0 +1,114 @@
+﻿@model HealthTrack3.Models.ClientDashboardViewModel
+@{
+    ViewBag.Title = "Client Dashboard";
+}
+
+<h2 class="page-title"><i class="fa-solid fa-gauge-high"></i> My Dashboard</h2>
+<p class="text-muted">Welcome back, <strong>@Model.FullName</strong></p>
+
+<div class="row">
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-weight-scale"></i></div>
+            <div class="stat-value">@(Model.LatestMetric != null ? Model.LatestMetric.WeightKg.ToString("0.#") + " kg" : "--")</div>
+            <div class="stat-label">Current weight</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+            <div class="stat-value">@(Model.LatestMetric != null ? Model.LatestMetric.Bmi.ToString("0.0") : "--")</div>
+            <div class="stat-label">BMI</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-fire"></i></div>
+            <div class="stat-value">@Model.TodayCaloriesBurned</div>
+            <div class="stat-label">Calories burned today</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-utensils"></i></div>
+            <div class="stat-value">@Model.TodayCaloriesEaten</div>
+            <div class="stat-label">Calories eaten today</div>
+        </div>
+    </div>
+</div>
+
+<div class="quick-actions">
+    <a href="@Url.Action("Metrics", "Client")" class="btn btn-ht"><i class="fa-solid fa-plus"></i> Add measurement</a>
+    <a href="@Url.Action("Workouts", "Client")" class="btn btn-ht"><i class="fa-solid fa-plus"></i> Log workout</a>
+    <a href="@Url.Action("Meals", "Client")" class="btn btn-ht"><i class="fa-solid fa-plus"></i> Log meal</a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="panel-ht">
+            <h4><i class="fa-solid fa-dumbbell"></i> Workout plans</h4>
+            @if (!Model.WorkoutPlans.Any())
+            {
+                <p class="text-muted">No workout plan yet. Your trainer will add one soon.</p>
+            }
+            else
+            {
+                foreach (var plan in Model.WorkoutPlans)
+                {
+                    <div class="plan-item">
+                        <strong>@plan.Title</strong>
+                        <div class="small text-muted">By @plan.Trainer.FullName | @plan.StartDate.ToString("dd MMM") to @plan.EndDate.ToString("dd MMM yyyy")</div>
+                        <div>@plan.Exercises</div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="panel-ht">
+            <h4><i class="fa-solid fa-apple-whole"></i> Diet schedule</h4>
+            @if (!Model.DietPlans.Any())
+            {
+                <p class="text-muted">No diet plan yet. Your trainer will add one soon.</p>
+            }
+            else
+            {
+                foreach (var plan in Model.DietPlans)
+                {
+                    <div class="plan-item">
+                        <strong>@plan.Title</strong>
+                        <div class="small text-muted">By @plan.Trainer.FullName | Target @plan.DailyCalorieTarget kcal/day</div>
+                        <div>@plan.Meals</div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<div class="panel-ht">
+    <h4><i class="fa-solid fa-calendar-check"></i> Upcoming appointments</h4>
+    @if (!Model.UpcomingAppointments.Any())
+    {
+        <p class="text-muted">No upcoming appointments.</p>
+    }
+    else
+    {
+        <table class="table table-ht">
+            <thead>
+                <tr><th>When</th><th>Trainer</th><th>Reason</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model.UpcomingAppointments)
+                {
+                    <tr>
+                        <td>@a.AppointmentDate.ToString("dd MMM yyyy, hh:mm tt")</td>
+                        <td>@a.Trainer.FullName</td>
+                        <td>@a.Reason</td>
+                        <td><span class="status-badge status-@a.Status.ToString().ToLower()">@a.Status</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

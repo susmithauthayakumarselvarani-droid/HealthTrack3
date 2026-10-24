@@ -1,0 +1,103 @@
+﻿@model HealthTrack3.Models.AppointmentReportViewModel
+@{
+    ViewBag.Title = "Appointment Report";
+    bool weekly = Model.Days == 7;
+}
+
+<div class="print-only"><h3>HealthTrack | Appointment Report</h3></div>
+<h2 class="page-title"><i class="fa-solid fa-calendar-check"></i> Appointment Report</h2>
+<p class="text-muted">
+    @(Model.IsAdmin ? "All trainers" : "Your appointments") | Since @Model.Days days ago | Generated @Model.GeneratedAt.ToString("dd MMM yyyy, hh:mm tt")
+</p>
+
+<div class="range-tabs no-print">
+    <a href="@Url.Action("AppointmentReport", "Analytics", new { days = 7 })" class="@(weekly ? "active" : "")">Weekly</a>
+    <a href="@Url.Action("AppointmentReport", "Analytics", new { days = 30 })" class="@(!weekly ? "active" : "")">Monthly</a>
+</div>
+
+<div class="quick-actions no-print">
+    <button type="button" class="btn btn-default" onclick="window.print()"><i class="fa-solid fa-file-pdf"></i> Print / Save as PDF</button>
+    <a href="@Url.Action("Report", "Analytics", new { days = Model.Days })" class="btn btn-default"><i class="fa-solid fa-users"></i> Client report</a>
+</div>
+
+<div class="row">
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-calendar"></i></div>
+            <div class="stat-value">@Model.Total</div>
+            <div class="stat-label">Total appointments</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+            <div class="stat-value">@Model.Pending</div>
+            <div class="stat-label">Pending</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="stat-value">@Model.Approved</div>
+            <div class="stat-label">Approved</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-ban"></i></div>
+            <div class="stat-value">@Model.Cancelled</div>
+            <div class="stat-label">Cancelled</div>
+        </div>
+    </div>
+</div>
+
+<div class="panel-ht" style="margin-top:20px;">
+    <h4><i class="fa-solid fa-table"></i> Appointments</h4>
+    @if (Model.Rows.Count == 0)
+    {
+        <div class="empty-state">
+            <i class="fa-solid fa-calendar-xmark"></i>
+            <p>No appointments in this period.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-ht">
+                <thead>
+                    <tr>
+                        <th>When</th>
+                        <th>Client</th>
+                        @if (Model.IsAdmin)
+                        {
+                            <th>Trainer</th>
+}
+                        <th>Reason</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Rows)
+                    {
+                        <tr>
+                            <td>@r.When.ToString("dd MMM yyyy, hh:mm tt")</td>
+                            <td>@r.ClientName</td>
+                            @if (Model.IsAdmin)
+                            {
+                                <td>@r.TrainerName</td>
+}
+                            <td>
+                                @r.Reason
+                                @if (!string.IsNullOrEmpty(r.TrainerNote))
+                                {
+                                    <div class="small text-muted">Note: @r.TrainerNote</div>
+                                }
+                            </td>
+                            <td><span class="status-badge status-@r.Status.ToLower()">@r.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -1,0 +1,76 @@
+﻿@using HealthTrack3.Models
+@model LoginViewModel
+@{
+    ViewBag.Title = "Log in";
+    ViewBag.FullWidth = true;
+}
+
+<div class="auth-split">
+    <div class="auth-side">
+        <div class="auth-side-inner">
+            <div class="auth-logo"><i class="fa-solid fa-heart-pulse"></i> HealthTrack</div>
+            <h1>Your health journey, all in one place.</h1>
+            <p>Plan workouts, log meals, track your progress and stay connected with your trainer.</p>
+            <ul class="auth-points">
+                <li><i class="fa-solid fa-circle-check"></i> Track workouts, meals and measurements</li>
+                <li><i class="fa-solid fa-circle-check"></i> See your progress in clear charts</li>
+                <li><i class="fa-solid fa-circle-check"></i> Book appointments with trainers</li>
+                <li><i class="fa-solid fa-circle-check"></i> Get reminders so you never miss a session</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="auth-main">
+        <div class="auth-form-card">
+            <h2>Welcome back</h2>
+            <p class="auth-sub">Log in to continue to your dashboard</p>
+
+            @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { role = "form" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Email)
+                    <div class="input-icon">
+                        <i class="fa-solid fa-envelope"></i>
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "you@example.com", autocomplete = "username", autofocus = "autofocus" })
+                    </div>
+                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Password)
+                    <div class="input-icon password-wrap">
+                        <i class="fa-solid fa-lock"></i>
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Enter your password", autocomplete = "current-password" })
+                        <button type="button" class="pw-toggle" onclick="togglePw('Password', this)" tabindex="-1" title="Show or hide password"><i class="fa-solid fa-eye"></i></button>
+                    </div>
+                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="checkbox">
+                    <label>@Html.CheckBoxFor(m => m.RememberMe) Remember me</label>
+                </div>
+
+                <button type="submit" class="btn btn-ht"><i class="fa-solid fa-right-to-bracket"></i> Log in</button>
+            }
+
+            <div class="auth-footer">
+                New to HealthTrack? @Html.ActionLink("Create an account", "Register")
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        function togglePw(id, btn) {
+            var input = document.getElementById(id);
+            var show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            btn.innerHTML = show ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+        }
+    </script>
+}

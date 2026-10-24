@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - HealthTrack</title>
+    <script>
+        // Apply the saved theme before the page is drawn, so there is no flash
+        try { if (localStorage.getItem('ht-theme') === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); } } catch (e) { }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+<body>
+    <nav class="navbar navbar-ht navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="@Url.Action("Index", "Home")"><i class="fa-solid fa-heart-pulse"></i> HealthTrack</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li>@Html.ActionLink("Home", "Index", "Home")</li>
+                    @if (User.IsInRole("Client"))
+                    {
+                        <li>@Html.ActionLink("Dashboard", "Index", "Client")</li>
+                        <li>@Html.ActionLink("Measurements", "Metrics", "Client")</li>
+                        <li>@Html.ActionLink("Workouts", "Workouts", "Client")</li>
+                        <li>@Html.ActionLink("Meals", "Meals", "Client")</li>
+                        <li>@Html.ActionLink("Appointments", "My", "Appointments")</li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Progress <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="@Url.Action("My", "Analytics")"><i class="fa-solid fa-chart-line"></i> Progress charts</a></li>
+                                <li><a href="@Url.Action("WorkoutReport", "Analytics")"><i class="fa-solid fa-dumbbell"></i> Workout history</a></li>
+                            </ul>
+                        </li>
+                    }
+                    @if (User.IsInRole("Trainer"))
+                    {
+                        <li>@Html.ActionLink("Dashboard", "Index", "Trainer")</li>
+                        <li>@Html.ActionLink("Appointments", "Manage", "Appointments")</li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reports <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="@Url.Action("Report", "Analytics")"><i class="fa-solid fa-users"></i> Client report</a></li>
+                                <li><a href="@Url.Action("WorkoutReport", "Analytics")"><i class="fa-solid fa-dumbbell"></i> Workout history</a></li>
+                                <li><a href="@Url.Action("AppointmentReport", "Analytics")"><i class="fa-solid fa-calendar-check"></i> Appointment report</a></li>
+                            </ul>
+                        </li>
+                    }
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li>@Html.ActionLink("Dashboard", "Index", "Admin")</li>
+                        <li>@Html.ActionLink("Users", "Users", "Admin")</li>
+                        <li>@Html.ActionLink("Trainers", "Trainers", "Admin")</li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reports <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="@Url.Action("Report", "Analytics")"><i class="fa-solid fa-users"></i> Client report</a></li>
+                                <li><a href="@Url.Action("WorkoutReport", "Analytics")"><i class="fa-solid fa-dumbbell"></i> Workout history</a></li>
+                                <li><a href="@Url.Action("AppointmentReport", "Analytics")"><i class="fa-solid fa-calendar-check"></i> Appointment report</a></li>
+                            </ul>
+                        </li>
+                    }
+                </ul>
+                @Html.Partial("_LoginPartial")
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#" id="themeToggle" class="theme-toggle" title="Switch light / dark mode"><i class="fa-solid fa-moon"></i></a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    @if (ViewBag.FullWidth == true)
+    {
+        @RenderBody()
+    }
+    else
+    {
+        <div class="container body-content" style="padding-top:20px; min-height:70vh;">
+            @RenderBody()
+        </div>
+    }
+
+    <footer class="site-footer">
+        <div class="container">
+            &copy; @DateTime.Now.Year HealthTrack &ndash; Personal Health &amp; Fitness Management System
+        </div>
+    </footer>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    <script>
+        $(function () {
+            // Highlight the menu item of the page the user is on
+            var path = window.location.pathname.toLowerCase().replace(/\/$/, '');
+            $('.navbar-nav:first > li > a').each(function () {
+                var href = ($(this).attr('href') || '').toLowerCase().replace(/\/$/, '');
+                if (href !== '' && href === path) { $(this).parent().addClass('active'); }
+            });
+            $('.navbar-nav:first .dropdown-menu a').each(function () {
+                var href = ($(this).attr('href') || '').toLowerCase().replace(/\/$/, '');
+                if (href === path) { $(this).closest('li.dropdown').addClass('active'); }
+            });
+            if (path === '') { $('.navbar-nav:first > li:first').addClass('active'); }
+
+            // Success / error messages fade away by themselves
+            setTimeout(function () {
+                $('.alert-success, .alert-danger').not('.validation-summary-errors').fadeOut(600);
+            }, 5000);
+
+            // Light / dark mode
+            function syncThemeIcon() {
+                var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+                $('#themeToggle i').attr('class', dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon');
+            }
+            syncThemeIcon();
+            $('#themeToggle').on('click', function (e) {
+                e.preventDefault();
+                var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+                if (dark) { document.documentElement.removeAttribute('data-theme'); }
+                else { document.documentElement.setAttribute('data-theme', 'dark'); }
+                try { localStorage.setItem('ht-theme', dark ? 'light' : 'dark'); } catch (err) { }
+                syncThemeIcon();
+            });
+        });
+    </script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>

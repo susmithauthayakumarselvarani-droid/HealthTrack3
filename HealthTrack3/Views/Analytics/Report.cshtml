@@ -1,0 +1,188 @@
+﻿@model HealthTrack3.Models.ReportViewModel
+@{
+    ViewBag.Title = "Report";
+    bool weekly = Model.Days == 7;
+}
+
+<div class="print-only"><h3>HealthTrack | @(Model.IsAdmin ? "System Report" : "Client Report")</h3></div>
+<h2 class="page-title"><i class="fa-solid fa-file-lines"></i> @(Model.IsAdmin ? "System Report" : "Client Report")</h2>
+<p class="text-muted">
+    @(Model.IsAdmin ? "All clients" : "Your clients") | Last @Model.Days days | Generated @Model.GeneratedAt.ToString("dd MMM yyyy, hh:mm tt")
+</p>
+
+<div class="range-tabs no-print">
+    <a href="@Url.Action("Report", "Analytics", new { days = 7 })" class="@(weekly ? "active" : "")">Weekly</a>
+    <a href="@Url.Action("Report", "Analytics", new { days = 30 })" class="@(!weekly ? "active" : "")">Monthly</a>
+</div>
+
+<div class="quick-actions no-print">
+    <button type="button" class="btn btn-default" onclick="window.print()"><i class="fa-solid fa-file-pdf"></i> Print / Save as PDF</button>
+    <a href="@Url.Action("ReportCsv", "Analytics", new { days = Model.Days })" class="btn btn-ht"><i class="fa-solid fa-file-csv"></i> Download CSV</a>
+    <a href="@Url.Action("WorkoutReport", "Analytics", new { days = Model.Days })" class="btn btn-default"><i class="fa-solid fa-dumbbell"></i> Workout history</a>
+    <a href="@Url.Action("AppointmentReport", "Analytics", new { days = Model.Days })" class="btn btn-default"><i class="fa-solid fa-calendar-check"></i> Appointment report</a>
+</div>
+
+<div class="row">
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-value">@Model.TotalClients</div>
+            <div class="stat-label">Clients</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-dumbbell"></i></div>
+            <div class="stat-value">@Model.TotalWorkouts</div>
+            <div class="stat-label">Workouts (@Model.Days days)</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-fire"></i></div>
+            <div class="stat-value">@Model.TotalBurned</div>
+            <div class="stat-label">Calories burned</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-utensils"></i></div>
+            <div class="stat-value">@Model.TotalEaten</div>
+            <div class="stat-label">Calories eaten</div>
+        </div>
+    </div>
+</div>
+
+@if (Model.Rows.Count == 0)
+{
+    <div class="panel-ht" style="margin-top:20px;">
+        <div class="empty-state">
+            <i class="fa-solid fa-user-slash"></i>
+            <p>@(Model.IsAdmin ? "No clients have registered yet." : "No clients are assigned to you yet.")</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row" style="margin-top:20px;">
+        <div class="col-md-7">
+            <div class="panel-ht">
+                <h4><i class="fa-solid fa-fire"></i> Calories burned per client</h4>
+                <div class="chart-box"><canvas id="clientChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="panel-ht">
+                <h4><i class="fa-solid fa-heart-pulse"></i> BMI categories</h4>
+                <div class="chart-box"><canvas id="bmiChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel-ht">
+        <h4><i class="fa-solid fa-table"></i> Client summary</h4>
+        <div class="table-responsive">
+            <table class="table table-ht">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        @if (Model.IsAdmin)
+                        {
+                            <th>Trainer</th>
+}
+                        <th>Weight</th>
+                        <th>BMI</th>
+                        <th>Change</th>
+                        <th>Workouts</th>
+                        <th>Burned</th>
+                        <th>Eaten</th>
+                        <th>Last workout</th>
+                        <th class="no-print"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Rows)
+                    {
+                        <tr>
+                            <td>@r.ClientName<div class="small text-muted">@r.Email</div></td>
+                            @if (Model.IsAdmin)
+                            {
+                                <td>@r.TrainerName</td>
+}
+                            <td>@(r.Weight.HasValue ? r.Weight.Value.ToString("0.#") + " kg" : "--")</td>
+                            <td>
+                                @if (r.Bmi.HasValue)
+                                {
+                                    @r.Bmi.Value.ToString("0.0")
+                                    <span class="bmi-badge @HealthTrack3.Helpers.AnalyticsService.BmiClass(r.BmiCategory)">@r.BmiCategory</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">--</span>
+                                }
+                            </td>
+                            <td>
+                                @if (r.WeightChange.HasValue)
+                                {
+                                    <span class="@(r.WeightChange.Value > 0 ? "change-up" : "change-down")">@((r.WeightChange.Value > 0 ? "+" : "") + r.WeightChange.Value.ToString("0.#")) kg</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">--</span>
+                                }
+                            </td>
+                            <td>@r.Workouts</td>
+                            <td>@r.Burned</td>
+                            <td>@r.Eaten</td>
+                            <td>@(r.LastWorkout.HasValue ? r.LastWorkout.Value.ToString("dd MMM yyyy") : "--")</td>
+                            <td class="no-print">
+                                <a href="@Url.Action("ClientProgress", "Analytics", new { id = r.Id, days = Model.Days })" class="btn btn-default btn-sm">Charts</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script>
+        (function () {
+            var barEl = document.getElementById('clientChart');
+            var bmiEl = document.getElementById('bmiChart');
+            if (!barEl || !bmiEl) { return; }
+
+            Chart.defaults.font.family = "'Poppins', sans-serif";
+            Chart.defaults.color = '#94a3b8';
+
+            new Chart(barEl, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(Model.ClientLabelsJson),
+                    datasets: [{ label: 'Calories burned', data: @Html.Raw(Model.ClientBurnedJson), backgroundColor: '#10b981', borderRadius: 6 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,0.2)' } }, x: { grid: { display: false } } }
+                }
+            });
+
+            new Chart(bmiEl, {
+                type: 'doughnut',
+                data: {
+                    labels: @Html.Raw(Model.BmiLabelsJson),
+                    datasets: [{ data: @Html.Raw(Model.BmiCountsJson), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'], borderWidth: 2 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        })();
+    </script>
+}

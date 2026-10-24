@@ -1,0 +1,111 @@
+﻿@{
+    ViewBag.Title = "Home";
+    ViewBag.FullWidth = true;
+}
+
+<div class="hero">
+    <div class="container">
+        <h1>Your Health. Your Goals. One Platform.</h1>
+        <p>Track workouts, plan your diet, monitor health metrics and book appointments with trainers, all in one place.</p>
+        @if (!Request.IsAuthenticated)
+        {
+            <a href="@Url.Action("Register", "Account")" class="btn btn-ht-outline btn-lg-ht" style="background:#fff; color:#0b7a6b;">Get Started</a>
+            <a href="@Url.Action("Login", "Account")" class="btn btn-ht-outline btn-lg-ht">Log in</a>
+        }
+        else
+        {
+            <a href="#features" class="btn btn-ht-outline btn-lg-ht">Explore Features</a>
+        }
+    </div>
+</div>
+
+<div class="section" id="features">
+    <div class="container">
+        <h2 class="section-title">Everything you need to stay fit</h2>
+        <p class="section-sub">Powerful tools for clients, trainers and administrators.</p>
+        <div class="row">
+            <div class="col-md-4 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-dumbbell"></i></div>
+                    <h4>Workout Plans</h4>
+                    <p>Trainers create personalized routines and clients log every session.</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-apple-whole"></i></div>
+                    <h4>Diet Management</h4>
+                    <p>Plan meals, log what you eat and stay on top of your calories.</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-weight-scale"></i></div>
+                    <h4>Health Metrics</h4>
+                    <p>Record weight, BMI and more, and see your trends over time.</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                    <h4>Appointments</h4>
+                    <p>Book consultations with trainers and healthcare professionals.</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-chart-line"></i></div>
+                    <h4>Progress Analytics</h4>
+                    <p>Charts and reports on performance, routines and engagement.</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-bell"></i></div>
+                    <h4>Smart Reminders</h4>
+                    <p>Never miss a workout, meal or appointment again.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="section" style="background:#fff;">
+    <div class="container">
+        <h2 class="section-title">Built for everyone</h2>
+        <p class="section-sub">Three roles, one secure system.</p>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="role-card">
+                    <i class="fa-solid fa-user"></i>
+                    <h4>Clients</h4>
+                    <p>Manage personal health data, workouts, diet and appointments.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="role-card">
+                    <i class="fa-solid fa-person-running"></i>
+                    <h4>Trainers</h4>
+                    <p>Assign routines, track client progress and give feedback.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="role-card">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <h4>Administrators</h4>
+                    <p>Oversee users, trainer assignments and system activity.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!Request.IsAuthenticated)
+{
+    <div class="cta-band">
+        <div class="container">
+            <h2>Ready to start your health journey?</h2>
+            <a href="@Url.Action("Register", "Account")" class="btn btn-ht btn-lg-ht">Create your free account</a>
+        </div>
+    </div>
+}

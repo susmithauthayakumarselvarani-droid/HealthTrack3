@@ -1,0 +1,102 @@
+﻿@model HealthTrack3.Models.AdminUsersViewModel
+@{
+    ViewBag.Title = "Manage Users";
+}
+
+<h2 class="page-title"><i class="fa-solid fa-users"></i> Manage Users</h2>
+<p class="text-muted">View all accounts, assign trainers to clients and enable or disable access.</p>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success"><i class="fa-solid fa-circle-check"></i> @TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation"></i> @TempData["Error"]</div>
+}
+
+<div class="panel-ht">
+    @using (Html.BeginForm("Users", "Admin", FormMethod.Get, new { @class = "filter-bar" }))
+    {
+        <select name="role" class="form-control">
+            @foreach (var r in new[] { "All", "Client", "Trainer", "Admin" })
+            {
+                <option value="@r" @(Model.RoleFilter == r ? "selected" : "")>@(r == "All" ? "All roles" : r + "s")</option>
+            }
+        </select>
+        <input type="text" name="q" value="@Model.Search" class="form-control" placeholder="Search name or email" />
+        <button type="submit" class="btn btn-ht"><i class="fa-solid fa-magnifying-glass"></i> Filter</button>
+    }
+
+    @if (!Model.Users.Any())
+    {
+        <div class="empty-state">
+            <i class="fa-solid fa-user-slash"></i>
+            <p>No users match your search.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-ht">
+                <thead>
+                    <tr><th>User</th><th>Role</th><th>Trainer</th><th>Joined</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in Model.Users)
+                    {
+                        <tr>
+                            <td>@u.FullName<div class="small text-muted">@u.Email</div></td>
+                            <td><span class="role-pill role-@u.Role.ToLower()">@u.Role</span></td>
+                            <td>
+                                @if (u.Role == "Client")
+                                {
+                                    using (Html.BeginForm("AssignTrainer", "Admin", FormMethod.Post, new { @class = "assign-form" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="clientId" value="@u.Id" />
+                                        <select name="trainerId" class="form-control">
+                                            <option value="">-- Unassigned --</option>
+                                            @foreach (var t in Model.Trainers)
+                                            {
+                                                <option value="@t.Value" @(t.Value == u.TrainerId ? "selected" : "")>@t.Text</option>
+                                            }
+                                        </select>
+                                        <button type="submit" class="btn btn-default btn-sm">Save</button>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">--</span>
+                                }
+                            </td>
+                            <td>@u.CreatedAt.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <span class="status-badge @(u.IsLocked ? "status-cancelled" : "status-approved")">@(u.IsLocked ? "Disabled" : "Active")</span>
+                            </td>
+                            <td>
+                                @if (u.Role != "Admin")
+                                {
+                                    using (Html.BeginForm("ToggleLock", "Admin", FormMethod.Post, new { @class = "inline-form", onsubmit = "return confirm('" + (u.IsLocked ? "Enable" : "Disable") + " this account?');" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@u.Id" />
+                                        <input type="hidden" name="returnTo" value="Users" />
+                                        if (u.IsLocked)
+                                        {
+                                            <button type="submit" class="btn btn-ht btn-sm">Enable</button>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit" class="btn btn-danger-ht btn-sm">Disable</button>
+                                        }
+                                    }
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

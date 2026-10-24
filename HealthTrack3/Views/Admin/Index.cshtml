@@ -1,0 +1,135 @@
+﻿@model HealthTrack3.Models.AdminDashboardViewModel
+@{
+    ViewBag.Title = "Admin Dashboard";
+    int apptTotal = Model.PendingAppointments + Model.ApprovedAppointments + Model.CancelledAppointments;
+    int pendPct = apptTotal == 0 ? 0 : (int)Math.Round(100.0 * Model.PendingAppointments / apptTotal);
+    int apprPct = apptTotal == 0 ? 0 : (int)Math.Round(100.0 * Model.ApprovedAppointments / apptTotal);
+    int cancPct = apptTotal == 0 ? 0 : 100 - pendPct - apprPct;
+}
+
+<h2 class="page-title"><i class="fa-solid fa-user-shield"></i> Admin Dashboard</h2>
+<p class="text-muted">System overview and usage.</p>
+
+@if (Model.UnassignedClients > 0)
+{
+    <div class="alert alert-info">
+        <i class="fa-solid fa-circle-info"></i>
+        @Model.UnassignedClients client(s) have no trainer yet.
+        <a href="@Url.Action("Users", "Admin", new { role = "Client" })"><strong>Assign trainers</strong></a>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-value">@Model.TotalUsers</div>
+            <div class="stat-label">Total users</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-user"></i></div>
+            <div class="stat-value">@Model.Clients</div>
+            <div class="stat-label">Clients</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-person-running"></i></div>
+            <div class="stat-value">@Model.Trainers</div>
+            <div class="stat-label">Trainers</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-user-plus"></i></div>
+            <div class="stat-value">@Model.NewUsersLast7Days</div>
+            <div class="stat-label">New users (7 days)</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-dumbbell"></i></div>
+            <div class="stat-value">@Model.WorkoutLogs</div>
+            <div class="stat-label">Workouts logged</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-utensils"></i></div>
+            <div class="stat-value">@Model.MealLogs</div>
+            <div class="stat-label">Meals logged</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-weight-scale"></i></div>
+            <div class="stat-value">@Model.Measurements</div>
+            <div class="stat-label">Measurements</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-user-clock"></i></div>
+            <div class="stat-value">@Model.UnassignedClients</div>
+            <div class="stat-label">Clients without trainer</div>
+        </div>
+    </div>
+</div>
+
+<div class="quick-actions">
+    <a href="@Url.Action("Users", "Admin")" class="btn btn-ht"><i class="fa-solid fa-users"></i> Manage users</a>
+    <a href="@Url.Action("Trainers", "Admin")" class="btn btn-ht"><i class="fa-solid fa-person-running"></i> Manage trainers</a>
+</div>
+
+<div class="row">
+    <div class="col-md-5">
+        <div class="panel-ht">
+            <h4><i class="fa-solid fa-calendar-check"></i> Appointments</h4>
+            @if (apptTotal == 0)
+            {
+                <div class="empty-state">
+                    <i class="fa-solid fa-calendar-xmark"></i>
+                    <p>No appointments yet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="energy-bar">
+                    <div style="width:@(pendPct)%; background:#f59e0b;"></div>
+                    <div style="width:@(apprPct)%; background:#10b981;"></div>
+                    <div style="width:@(cancPct)%; background:#ef4444;"></div>
+                </div>
+                <div class="energy-legend">
+                    <span><i class="fa-solid fa-circle" style="color:#f59e0b"></i> Pending: @Model.PendingAppointments</span>
+                    <span><i class="fa-solid fa-circle" style="color:#10b981"></i> Approved: @Model.ApprovedAppointments</span>
+                    <span><i class="fa-solid fa-circle" style="color:#ef4444"></i> Cancelled: @Model.CancelledAppointments</span>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="panel-ht">
+            <h4><i class="fa-solid fa-user-plus"></i> Recent registrations</h4>
+            <div class="table-responsive">
+                <table class="table table-ht">
+                    <thead><tr><th>Name</th><th>Role</th><th>Joined</th></tr></thead>
+                    <tbody>
+                        @foreach (var u in Model.RecentUsers)
+                        {
+                            <tr>
+                                <td>@u.FullName<div class="small text-muted">@u.Email</div></td>
+                                <td><span class="role-pill role-@u.Role.ToLower()">@u.Role</span></td>
+                                <td>@u.CreatedAt.ToString("dd MMM yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

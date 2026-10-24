@@ -1,0 +1,166 @@
+﻿@model HealthTrack3.Models.ClientProgressViewModel
+@{
+    ViewBag.Title = "Client Progress";
+    string clientName = string.IsNullOrEmpty(Model.Client.FullName) ? Model.Client.Email : Model.Client.FullName;
+}
+
+<h2 class="page-title"><i class="fa-solid fa-chart-line"></i> @clientName</h2>
+<p class="text-muted">@Model.Client.Email</p>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="quick-actions">
+    <a href="@Url.Action("CreateWorkoutPlan", "Trainer", new { id = Model.Client.Id })" class="btn btn-ht"><i class="fa-solid fa-plus"></i> Workout plan</a>
+    <a href="@Url.Action("CreateDietPlan", "Trainer", new { id = Model.Client.Id })" class="btn btn-ht"><i class="fa-solid fa-plus"></i> Diet plan</a>
+    <a href="@Url.Action("ClientProgress", "Analytics", new { id = Model.Client.Id })" class="btn btn-ht"><i class="fa-solid fa-chart-line"></i> View charts</a>
+    <a href="@Url.Action("Index", "Trainer")" class="btn btn-default">Back to clients</a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="panel-ht">
+            <h4><i class="fa-solid fa-weight-scale"></i> Measurements</h4>
+            @if (!Model.Metrics.Any())
+            {
+                <p class="text-muted">Nothing recorded yet.</p>
+            }
+            else
+            {
+                <table class="table table-ht">
+                    <thead><tr><th>Date</th><th>Weight</th><th>BMI</th><th>Burned</th></tr></thead>
+                    <tbody>
+                        @foreach (var m in Model.Metrics)
+                        {
+                            <tr>
+                                <td>@m.RecordedOn.ToString("dd MMM yyyy")</td>
+                                <td>@m.WeightKg.ToString("0.#") kg</td>
+                                <td>@m.Bmi.ToString("0.0")</td>
+                                <td>@m.CaloriesBurned</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="panel-ht">
+            <h4><i class="fa-solid fa-dumbbell"></i> Workout log</h4>
+            @if (!Model.Workouts.Any())
+            {
+                <p class="text-muted">No workouts logged yet.</p>
+            }
+            else
+            {
+                <table class="table table-ht">
+                    <thead><tr><th>Date</th><th>Exercise</th><th>Min</th><th>Burned</th></tr></thead>
+                    <tbody>
+                        @foreach (var w in Model.Workouts)
+                        {
+                            <tr>
+                                <td>@w.LoggedOn.ToString("dd MMM yyyy")</td>
+                                <td>@w.ExerciseName</td>
+                                <td>@w.DurationMinutes</td>
+                                <td>@w.CaloriesBurned</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="panel-ht">
+    <h4><i class="fa-solid fa-utensils"></i> Meal log</h4>
+    @if (!Model.Meals.Any())
+    {
+        <p class="text-muted">No meals logged yet.</p>
+    }
+    else
+    {
+        <table class="table table-ht">
+            <thead><tr><th>Date</th><th>Meal</th><th>Food</th><th>Calories</th></tr></thead>
+            <tbody>
+                @foreach (var m in Model.Meals)
+                {
+                    <tr>
+                        <td>@m.LoggedOn.ToString("dd MMM yyyy")</td>
+                        <td>@m.MealType</td>
+                        <td>@m.FoodName</td>
+                        <td>@m.Calories</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="panel-ht">
+            <h4>Workout plans I gave</h4>
+            @if (!Model.WorkoutPlans.Any())
+            {
+                <p class="text-muted">None yet.</p>
+            }
+            @foreach (var p in Model.WorkoutPlans)
+            {
+                <div class="plan-item">
+                    <strong>@p.Title</strong>
+                    <div class="small text-muted">@p.StartDate.ToString("dd MMM") to @p.EndDate.ToString("dd MMM yyyy")</div>
+                    <div>@p.Exercises</div>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="panel-ht">
+            <h4>Diet plans I gave</h4>
+            @if (!Model.DietPlans.Any())
+            {
+                <p class="text-muted">None yet.</p>
+            }
+            @foreach (var p in Model.DietPlans)
+            {
+                <div class="plan-item">
+                    <strong>@p.Title</strong>
+                    <div class="small text-muted">Target @p.DailyCalorieTarget kcal/day | @p.StartDate.ToString("dd MMM") to @p.EndDate.ToString("dd MMM yyyy")</div>
+                    <div>@p.Meals</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="panel-ht">
+    <h4><i class="fa-solid fa-comment-dots"></i> Feedback</h4>
+    @using (Html.BeginForm("AddFeedback", "Trainer", FormMethod.Post, new { role = "form" }))
+    {
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="clientId" value="@Model.Client.Id" />
+        <div class="form-group">
+            <textarea name="message" class="form-control" rows="3" maxlength="500" required placeholder="Write feedback for this client..." style="height:auto;"></textarea>
+        </div>
+        <button type="submit" class="btn btn-ht">Send feedback</button>
+    }
+    <hr />
+    @if (!Model.Feedbacks.Any())
+    {
+        <p class="text-muted">No feedback sent yet.</p>
+    }
+    @foreach (var f in Model.Feedbacks)
+    {
+        <div class="plan-item">
+            <div class="small text-muted">@f.CreatedAt.ToString("dd MMM yyyy, hh:mm tt")</div>
+            <div>@f.Message</div>
+        </div>
+    }
+</div>

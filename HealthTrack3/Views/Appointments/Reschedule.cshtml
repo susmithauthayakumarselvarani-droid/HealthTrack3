@@ -1,0 +1,95 @@
+﻿@model HealthTrack3.Models.Appointment
+@{
+    ViewBag.Title = "Reschedule appointment";
+    string trainerName = string.IsNullOrEmpty(Model.Trainer.FullName) ? Model.Trainer.Email : Model.Trainer.FullName;
+    string selectedDate = ViewBag.SelectedDate as string ?? "";
+}
+
+<h2 class="page-title"><i class="fa-solid fa-calendar-pen"></i> Reschedule appointment</h2>
+<p class="text-muted">Choose a new date and time. Your trainer has to approve the change.</p>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="panel-ht">
+            <div class="alert alert-info" style="margin-bottom:20px;">
+                <i class="fa-solid fa-circle-info"></i>
+                Current booking: <strong>@Model.AppointmentDate.ToString("dddd, dd MMM yyyy 'at' hh:mm tt")</strong> with <strong>@trainerName</strong>
+            </div>
+
+            @using (Html.BeginForm("Reschedule", "Appointments", new { id = Model.Id }, FormMethod.Post, new { id = "bookForm", role = "form" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+                <input type="hidden" id="trainerId" value="@Model.TrainerId" />
+
+                <div class="form-group">
+                    <label for="date">New date</label>
+                    <input type="date" id="date" name="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" value="@selectedDate" />
+                </div>
+                <div class="form-group">
+                    <label>New time slot</label>
+                    <div id="slotGrid" class="slot-grid"></div>
+                    <input type="hidden" id="slot" name="slot" />
+                    <div id="slotHint" class="slot-hint">Choose a date to see the available times.</div>
+                </div>
+                <button type="submit" class="btn btn-ht"><i class="fa-solid fa-calendar-check"></i> Request new time</button>
+                <a href="@Url.Action("My", "Appointments")" class="btn btn-default">Back</a>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var slotsUrl = '@Url.Action("Slots", "Appointments")';
+            var ignoreId = @Model.Id;
+            var preselect = '@(ViewBag.SelectedSlot as string)';
+            var $trainer = $('#trainerId'), $date = $('#date'), $grid = $('#slotGrid'), $slot = $('#slot'), $hint = $('#slotHint');
+
+            function load() {
+                var trainer = $trainer.val(), date = $date.val();
+                $slot.val('');
+                $grid.empty();
+                if (!trainer || !date) {
+                    $hint.css('color', '').text('Choose a date to see the available times.');
+                    return;
+                }
+                $hint.css('color', '').text('Loading available times...');
+                $.getJSON(slotsUrl, { trainerId: trainer, date: date, ignoreId: ignoreId }, function (data) {
+                    var any = false;
+                    $.each(data.slots, function (i, s) {
+                        var $b = $('<button type="button" class="slot-btn"></button>')
+                            .text(s.label).attr('data-time', s.time).prop('disabled', !s.available);
+                        if (s.available) { any = true; }
+                        if (s.available && preselect === s.time) { $b.addClass('selected'); $slot.val(s.time); }
+                        $grid.append($b);
+                    });
+                    preselect = '';
+                    $hint.text(any
+                        ? 'Select a time slot. Greyed-out times are already booked or in the past.'
+                        : 'No free time slots on this day. Please choose another date.');
+                }).fail(function () {
+                    $hint.css('color', '#dc2626').text('Could not load time slots. Please try again.');
+                });
+            }
+
+            $grid.on('click', '.slot-btn:not(:disabled)', function () {
+                $grid.find('.slot-btn').removeClass('selected');
+                $(this).addClass('selected');
+                $slot.val($(this).attr('data-time'));
+                $hint.css('color', '');
+            });
+            $date.on('change', load);
+
+            $('#bookForm').on('submit', function (e) {
+                if (!$slot.val()) {
+                    e.preventDefault();
+                    $hint.css('color', '#dc2626').text('Please select a time slot.');
+                }
+            });
+
+            load();
+        })();
+    </script>
+}

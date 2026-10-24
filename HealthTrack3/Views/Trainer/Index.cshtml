@@ -1,0 +1,55 @@
+﻿@model HealthTrack3.Models.TrainerDashboardViewModel
+@{
+    ViewBag.Title = "Trainer Dashboard";
+}
+
+<h2 class="page-title"><i class="fa-solid fa-person-running"></i> Trainer Dashboard</h2>
+<p class="text-muted">Welcome, <strong>@Model.FullName</strong></p>
+
+<div class="row">
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-value">@Model.Clients.Count</div>
+            <div class="stat-label">My clients</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+            <div class="stat-value">@Model.PendingAppointments</div>
+            <div class="stat-label">Pending appointments</div>
+        </div>
+    </div>
+</div>
+
+<div class="panel-ht" style="margin-top:20px;">
+    <h4><i class="fa-solid fa-users"></i> My clients</h4>
+    @if (!Model.Clients.Any())
+    {
+        <p class="text-muted">No clients assigned to you yet. The administrator will assign clients to you.</p>
+    }
+    else
+    {
+        <table class="table table-ht">
+            <thead>
+                <tr><th>Client</th><th>Email</th><th>Weight</th><th>BMI</th><th>Last workout</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model.Clients)
+                {
+                    <tr>
+                        <td>@c.FullName</td>
+                        <td>@c.Email</td>
+                        <td>@(c.LatestWeight.HasValue ? c.LatestWeight.Value.ToString("0.#") + " kg" : "--")</td>
+                        <td>@(c.LatestBmi.HasValue ? c.LatestBmi.Value.ToString("0.0") : "--")</td>
+                        <td>@(c.LastWorkout.HasValue ? c.LastWorkout.Value.ToString("dd MMM yyyy") : "--")</td>
+                        <td>
+                            <a href="@Url.Action("Progress", "Trainer", new { id = c.Id })" class="btn btn-ht btn-sm">View progress</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

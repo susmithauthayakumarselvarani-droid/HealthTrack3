@@ -1,0 +1,54 @@
+﻿@model HealthTrack3.Models.DietPlan
+@{
+    ViewBag.Title = "Create Diet Plan";
+}
+
+<h2 class="page-title"><i class="fa-solid fa-apple-whole"></i> New diet plan</h2>
+<p class="text-muted">For <strong>@ViewBag.ClientName</strong></p>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="panel-ht">
+            @using (Html.BeginForm("CreateDietPlan", "Trainer", FormMethod.Post, new { role = "form" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.ClientId)
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Title)
+                    @Html.TextBoxFor(m => m.Title, new { @class = "form-control", placeholder = "e.g. Weight loss diet" })
+                    @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger" })
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Meals)
+                    @Html.TextAreaFor(m => m.Meals, 6, 40, new { @class = "form-control", style = "height:auto;", placeholder = "Breakfast: Oats + banana..." })
+                    @Html.ValidationMessageFor(m => m.Meals, "", new { @class = "text-danger" })
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.DailyCalorieTarget)
+                    @Html.TextBoxFor(m => m.DailyCalorieTarget, new { @class = "form-control", type = "number" })
+                    @Html.ValidationMessageFor(m => m.DailyCalorieTarget, "", new { @class = "text-danger" })
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 form-group">
+                        @Html.LabelFor(m => m.StartDate)
+                        @Html.TextBoxFor(m => m.StartDate, "{0:yyyy-MM-dd}", new { type = "date", @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.StartDate, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        @Html.LabelFor(m => m.EndDate)
+                        @Html.TextBoxFor(m => m.EndDate, "{0:yyyy-MM-dd}", new { type = "date", @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.EndDate, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-ht">Save plan</button>
+                <a href="@Url.Action("Progress", "Trainer", new { id = Model.ClientId })" class="btn btn-default">Cancel</a>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

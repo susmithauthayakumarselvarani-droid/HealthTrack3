@@ -1,0 +1,41 @@
+﻿@using Microsoft.AspNet.Identity
+
+@if (Request.IsAuthenticated)
+{
+    using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "navbar-right" }))
+    {
+        @Html.AntiForgeryToken()
+        <ul class="nav navbar-nav navbar-right">
+            <li>@Html.Action("Bell", "Notifications")</li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                    <i class="fa-solid fa-circle-user"></i>
+                    @User.Identity.GetUserName()
+                    @if (User.IsInRole("Admin"))
+                    {<span class="role-badge">Admin</span> }
+                    else if (User.IsInRole("Trainer"))
+                    { <span class="role-badge">Trainer</span> }
+                    else if (User.IsInRole("Client"))
+                    { <span class="role-badge">Client</span>}
+                    <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="@Url.Action("ChangePassword", "Manage")"><i class="fa-solid fa-key"></i> Change password</a></li>
+                    <li><a href="@Url.Action("Index", "Notifications")"><i class="fa-solid fa-bell"></i> Notifications</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="javascript:document.getElementById('logoutForm').submit()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Log off
+                </a>
+            </li>
+        </ul>
+    }
+}
+else
+{
+    <ul class="nav navbar-nav navbar-right">
+        <li>@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
+        <li><a href="@Url.Action("Register", "Account")" class="btn btn-ht" style="color:#fff; margin-top:15px; padding:6px 18px; line-height:1.6;">Register</a></li>
+    </ul>
+}

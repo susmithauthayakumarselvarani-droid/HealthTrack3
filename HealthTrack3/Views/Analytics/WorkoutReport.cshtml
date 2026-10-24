@@ -1,0 +1,93 @@
+﻿@model HealthTrack3.Models.WorkoutReportViewModel
+@{
+    ViewBag.Title = "Workout History";
+    bool weekly = Model.Days == 7;
+}
+
+<div class="print-only"><h3>HealthTrack | Workout History</h3></div>
+<h2 class="page-title"><i class="fa-solid fa-dumbbell"></i> Workout History</h2>
+<p class="text-muted">
+    @(Model.IsClient ? "Your sessions" : "Client sessions") | Last @Model.Days days | Generated @Model.GeneratedAt.ToString("dd MMM yyyy, hh:mm tt")
+</p>
+
+<div class="range-tabs no-print">
+    <a href="@Url.Action("WorkoutReport", "Analytics", new { days = 7 })" class="@(weekly ? "active" : "")">Weekly</a>
+    <a href="@Url.Action("WorkoutReport", "Analytics", new { days = 30 })" class="@(!weekly ? "active" : "")">Monthly</a>
+</div>
+
+<div class="quick-actions no-print">
+    <button type="button" class="btn btn-default" onclick="window.print()"><i class="fa-solid fa-file-pdf"></i> Print / Save as PDF</button>
+    @if (Model.IsClient)
+    {
+        <a href="@Url.Action("Workouts", "Client")" class="btn btn-ht"><i class="fa-solid fa-plus"></i> Log workout</a>
+    }
+</div>
+
+<div class="row">
+    <div class="col-md-4 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-dumbbell"></i></div>
+            <div class="stat-value">@Model.TotalSessions</div>
+            <div class="stat-label">Sessions</div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-stopwatch"></i></div>
+            <div class="stat-value">@Model.TotalMinutes</div>
+            <div class="stat-label">Total minutes</div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-fire"></i></div>
+            <div class="stat-value">@Model.TotalCalories</div>
+            <div class="stat-label">Calories burned</div>
+        </div>
+    </div>
+</div>
+
+<div class="panel-ht" style="margin-top:20px;">
+    <h4><i class="fa-solid fa-table"></i> Sessions</h4>
+    @if (Model.Rows.Count == 0)
+    {
+        <div class="empty-state">
+            <i class="fa-solid fa-dumbbell"></i>
+            <p>No workouts in this period.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-ht">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        @if (!Model.IsClient)
+                        {
+                            <th>Client</th>
+}
+                        <th>Exercise</th>
+                        <th>Minutes</th>
+                        <th>Calories burned</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Rows)
+                    {
+                        <tr>
+                            <td>@r.Date.ToString("dd MMM yyyy")</td>
+                            @if (!Model.IsClient)
+                            {
+                                <td>@r.ClientName</td>
+}
+                            <td>@r.Exercise</td>
+                            <td>@r.Minutes</td>
+                            <td>@r.Calories</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

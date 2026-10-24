@@ -1,0 +1,178 @@
+﻿@model HealthTrack3.Models.Appointment
+@{
+    ViewBag.Title = "My Appointments";
+    var history = (List<HealthTrack3.Models.Appointment>)ViewBag.History;
+    var trainers = (List<SelectListItem>)ViewBag.Trainers;
+    string selectedDate = ViewBag.SelectedDate as string ?? "";
+    Func<HealthTrack3.Models.ApplicationUser, string> nameOf = u => string.IsNullOrEmpty(u.FullName) ? u.Email : u.FullName;
+}
+
+<h2 class="page-title"><i class="fa-solid fa-calendar-check"></i> My Appointments</h2>
+<p class="text-muted">Pick a trainer, a date and a free time slot. Your trainer confirms the booking.</p>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success"><i class="fa-solid fa-circle-check"></i> @TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation"></i> @TempData["Error"]</div>
+}
+
+<div class="row">
+    <div class="col-md-5">
+        <div class="panel-ht">
+            <h4>Book an appointment</h4>
+            @if (trainers.Count == 0)
+            {
+                <div class="empty-state">
+                    <i class="fa-solid fa-user-slash"></i>
+                    <p>No trainers are available yet.<br />Please check again later.</p>
+                </div>
+            }
+            else
+            {
+                using (Html.BeginForm("My", "Appointments", FormMethod.Post, new { id = "bookForm", role = "form" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+                    <div class="form-group">
+                        <label for="trainerId">Trainer</label>
+                        @Html.DropDownList("trainerId", new SelectList(trainers, "Value", "Text", Model.TrainerId), "-- Select trainer --", new { id = "trainerId", @class = "form-control" })
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" id="date" name="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" value="@selectedDate" />
+                    </div>
+                    <div class="form-group">
+                        <label>Time slot</label>
+                        <div id="slotGrid" class="slot-grid"></div>
+                        <input type="hidden" id="slot" name="slot" />
+                        <div id="slotHint" class="slot-hint">Choose a trainer and a date to see the available times.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="reason">Reason</label>
+                        <textarea id="reason" name="reason" class="form-control" rows="3" maxlength="300" style="height:auto;" placeholder="e.g. Review my workout plan">@Model.Reason</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-ht btn-block"><i class="fa-solid fa-paper-plane"></i> Request appointment</button>
+                }
+            }
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="panel-ht">
+            <h4>My appointments</h4>
+            @if (history.Count == 0)
+            {
+                <div class="empty-state">
+                    <i class="fa-solid fa-calendar-xmark"></i>
+                    <p>No appointments yet. Book your first one!</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-ht">
+                        <thead>
+                            <tr><th>When</th><th>Trainer</th><th>Reason</th><th>Status</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in history)
+                            {
+                                bool isPast = a.AppointmentDate <= DateTime.Now;
+                                bool canChange = !isPast && a.Status != HealthTrack3.Models.AppointmentStatus.Cancelled;
+                                <tr>
+                                    <td>
+                                        @a.AppointmentDate.ToString("dd MMM yyyy, hh:mm tt")
+                                        @if (isPast)
+                                        {
+                                            <div class="past-tag">PAST</div>
+                                        }
+                                    </td>
+                                    <td>@nameOf(a.Trainer)</td>
+                                    <td>
+                                        @a.Reason
+                                        @if (!string.IsNullOrEmpty(a.TrainerNote))
+                                        {
+                                            <div class="small text-muted"><i class="fa-solid fa-comment-dots"></i> @a.TrainerNote</div>
+                                        }
+                                    </td>
+                                    <td><span class="status-badge status-@a.Status.ToString().ToLower()">@a.Status</span></td>
+                                    <td>
+                                        @if (canChange)
+                                        {
+                                            <a href="@Url.Action("Reschedule", "Appointments", new { id = a.Id })" class="btn btn-default btn-sm">Reschedule</a>
+                                            using (Html.BeginForm("Cancel", "Appointments", FormMethod.Post, new { @class = "inline-form", onsubmit = "return confirm('Cancel this appointment?');" }))
+                                            {
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@a.Id" />
+                                                <button type="submit" class="btn btn-danger-ht btn-sm">Cancel</button>
+                                            }
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var slotsUrl = '@Url.Action("Slots", "Appointments")';
+            var ignoreId = 0;
+            var preselect = '@(ViewBag.SelectedSlot as string)';
+            var $trainer = $('#trainerId'), $date = $('#date'), $grid = $('#slotGrid'), $slot = $('#slot'), $hint = $('#slotHint');
+
+            function load() {
+                var trainer = $trainer.val(), date = $date.val();
+                $slot.val('');
+                $grid.empty();
+                if (!trainer || !date) {
+                    $hint.css('color', '').text('Choose a trainer and a date to see the available times.');
+                    return;
+                }
+                $hint.css('color', '').text('Loading available times...');
+                $.getJSON(slotsUrl, { trainerId: trainer, date: date, ignoreId: ignoreId }, function (data) {
+                    var any = false;
+                    $.each(data.slots, function (i, s) {
+                        var $b = $('<button type="button" class="slot-btn"></button>')
+                            .text(s.label).attr('data-time', s.time).prop('disabled', !s.available);
+                        if (s.available) { any = true; }
+                        if (s.available && preselect === s.time) { $b.addClass('selected'); $slot.val(s.time); }
+                        $grid.append($b);
+                    });
+                    preselect = '';
+                    $hint.text(any
+                        ? 'Select a time slot. Greyed-out times are already booked or in the past.'
+                        : 'No free time slots on this day. Please choose another date.');
+                }).fail(function () {
+                    $hint.css('color', '#dc2626').text('Could not load time slots. Please try again.');
+                });
+            }
+
+            $grid.on('click', '.slot-btn:not(:disabled)', function () {
+                $grid.find('.slot-btn').removeClass('selected');
+                $(this).addClass('selected');
+                $slot.val($(this).attr('data-time'));
+                $hint.css('color', '');
+            });
+            $trainer.on('change', load);
+            $date.on('change', load);
+
+            $('#bookForm').on('submit', function (e) {
+                if (!$slot.val()) {
+                    e.preventDefault();
+                    $hint.css('color', '#dc2626').text('Please select a time slot.');
+                }
+            });
+
+            load();
+        })();
+    </script>
+}

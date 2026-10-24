@@ -1,0 +1,118 @@
+﻿@model HealthTrack3.Models.RegisterViewModel
+@{
+    ViewBag.Title = "Register";
+    ViewBag.FullWidth = true;
+    bool trainerSelected = Model != null && Model.Role == "Trainer";
+}
+
+<div class="auth-split">
+    <div class="auth-side">
+        <div class="auth-side-inner">
+            <div class="auth-logo"><i class="fa-solid fa-heart-pulse"></i> HealthTrack</div>
+            <h1>Start your journey today.</h1>
+            <p>Create a free account and get a complete health and fitness toolkit.</p>
+            <ul class="auth-points">
+                <li><i class="fa-solid fa-circle-check"></i> Personal dashboard with health stats</li>
+                <li><i class="fa-solid fa-circle-check"></i> Workout and diet plans from your trainer</li>
+                <li><i class="fa-solid fa-circle-check"></i> Secure and private health data</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="auth-main">
+        <div class="auth-form-card">
+            <h2>Create your account</h2>
+            <p class="auth-sub">It only takes a minute</p>
+
+            @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { role = "form" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+                <div class="form-group">
+                    <label>I am a</label>
+                    <div class="role-options">
+                        <label class="role-option">
+                            @Html.RadioButton("Role", "Client", !trainerSelected)
+                            <span class="role-option-body"><i class="fa-solid fa-user"></i><strong>Client</strong><small>Track my health</small></span>
+                        </label>
+                        <label class="role-option">
+                            @Html.RadioButton("Role", "Trainer", trainerSelected)
+                            <span class="role-option-body"><i class="fa-solid fa-person-running"></i><strong>Trainer</strong><small>Coach clients</small></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.FullName)
+                    <div class="input-icon">
+                        <i class="fa-solid fa-user"></i>
+                        @Html.TextBoxFor(m => m.FullName, new { @class = "form-control", placeholder = "Your full name", autocomplete = "name" })
+                    </div>
+                    @Html.ValidationMessageFor(m => m.FullName, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Email)
+                    <div class="input-icon">
+                        <i class="fa-solid fa-envelope"></i>
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "you@example.com", autocomplete = "username" })
+                    </div>
+                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Password)
+                    <div class="input-icon password-wrap">
+                        <i class="fa-solid fa-lock"></i>
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Create a password", autocomplete = "new-password" })
+                        <button type="button" class="pw-toggle" onclick="togglePw('Password', this)" tabindex="-1" title="Show or hide password"><i class="fa-solid fa-eye"></i></button>
+                    </div>
+                    <div class="pw-meter" id="pwMeter" data-score="0"><span></span></div>
+                    <div class="pw-text" id="pwText">Use 6+ characters with upper and lower case, a number and a symbol.</div>
+                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.ConfirmPassword)
+                    <div class="input-icon password-wrap">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control", placeholder = "Re-enter your password", autocomplete = "new-password" })
+                        <button type="button" class="pw-toggle" onclick="togglePw('ConfirmPassword', this)" tabindex="-1" title="Show or hide password"><i class="fa-solid fa-eye"></i></button>
+                    </div>
+                    @Html.ValidationMessageFor(m => m.ConfirmPassword, "", new { @class = "text-danger" })
+                </div>
+
+                <button type="submit" class="btn btn-ht"><i class="fa-solid fa-user-plus"></i> Create account</button>
+            }
+
+            <div class="auth-footer">
+                Already have an account? @Html.ActionLink("Log in", "Login")
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        function togglePw(id, btn) {
+            var input = document.getElementById(id);
+            var show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            btn.innerHTML = show ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+        }
+
+        // Password strength meter
+        $('#Password').on('input', function () {
+            var v = this.value, score = 0;
+            if (v.length >= 6) { score++; }
+            if (/[a-z]/.test(v) && /[A-Z]/.test(v)) { score++; }
+            if (/\d/.test(v)) { score++; }
+            if (/[^A-Za-z0-9]/.test(v)) { score++; }
+            if (v.length === 0) { score = 0; }
+            $('#pwMeter').attr('data-score', score).find('span').css('width', (score * 25) + '%');
+            $('#pwText').text(['Use 6+ characters with upper and lower case, a number and a symbol.', 'Weak', 'Fair', 'Good', 'Strong password'][score]);
+        });
+    </script>
+}

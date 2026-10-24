@@ -1,0 +1,149 @@
+﻿@model HealthTrack3.Models.ProgressChartData
+@{
+    ViewBag.Title = "Progress";
+    string heading = ViewBag.Heading as string ?? "Progress";
+    string bmiClass = HealthTrack3.Helpers.AnalyticsService.BmiClass(Model.BmiCategory);
+}
+
+<h2 class="page-title"><i class="fa-solid fa-chart-line"></i> @heading</h2>
+<p class="text-muted">Your recent measurements and the last 14 days of calories.</p>
+
+<div class="quick-actions no-print">
+    <a href="@ViewBag.BackUrl" class="btn btn-default"><i class="fa-solid fa-arrow-left"></i> @ViewBag.BackText</a>
+</div>
+
+<div class="row">
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-weight-scale"></i></div>
+            <div class="stat-value">@(Model.HasMetrics ? Model.CurrentWeight.ToString("0.#") + " kg" : "--")</div>
+            <div class="stat-label">Current weight</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-arrow-trend-down"></i></div>
+            <div class="stat-value">@(Model.MetricCount >= 2 ? (Model.WeightChange > 0 ? "+" : "") + Model.WeightChange.ToString("0.#") + " kg" : "--")</div>
+            <div class="stat-label">Weight change</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+            <div class="stat-value">@(Model.HasMetrics ? Model.CurrentBmi.ToString("0.0") : "--")</div>
+            <div class="stat-label">BMI</div>
+            @if (Model.HasMetrics)
+            {
+                <span class="bmi-badge @bmiClass">@Model.BmiCategory</span>
+            }
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-fire"></i></div>
+            <div class="stat-value">@Model.TotalBurned</div>
+            <div class="stat-label">Calories burned (14 days) | @Model.WorkoutCount workouts</div>
+        </div>
+    </div>
+</div>
+
+<div class="row" style="margin-top:20px;">
+    <div class="col-md-6">
+        <div class="panel-ht">
+            <h4><i class="fa-solid fa-weight-scale"></i> Weight (kg)</h4>
+            @if (Model.HasMetrics)
+            {
+                <div class="chart-box"><canvas id="weightChart"></canvas></div>
+            }
+            else
+            {
+                <div class="empty-state"><i class="fa-solid fa-chart-line"></i><p>No measurements yet.</p></div>
+            }
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="panel-ht">
+            <h4><i class="fa-solid fa-heart-pulse"></i> BMI</h4>
+            @if (Model.HasMetrics)
+            {
+                <div class="chart-box"><canvas id="bmiChart"></canvas></div>
+            }
+            else
+            {
+                <div class="empty-state"><i class="fa-solid fa-chart-line"></i><p>No measurements yet.</p></div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="panel-ht">
+    <h4><i class="fa-solid fa-fire"></i> Calories: eaten vs burned (last 14 days)</h4>
+    <div class="chart-box"><canvas id="caloriesChart"></canvas></div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script>
+        (function () {
+            Chart.defaults.font.family = "'Poppins', sans-serif";
+            Chart.defaults.color = '#64748b';
+
+            var teal = '#0f9d8a', blue = '#2563eb', amber = '#f59e0b', green = '#10b981';
+            var grid = { color: '#f1f5f9' };
+
+            function lineChart(id, label, labels, values, color, fillColor) {
+                var el = document.getElementById(id);
+                if (!el) { return; }
+                new Chart(el, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: label,
+                            data: values,
+                            borderColor: color,
+                            backgroundColor: fillColor,
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: 4,
+                            pointBackgroundColor: color
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { grid: grid }, x: { grid: { display: false } } }
+                    }
+                });
+            }
+
+            var weightLabels = @Html.Raw(Model.WeightLabelsJson);
+            var weightValues = @Html.Raw(Model.WeightValuesJson);
+            var bmiValues = @Html.Raw(Model.BmiValuesJson);
+            var dayLabels = @Html.Raw(Model.DayLabelsJson);
+            var burned = @Html.Raw(Model.BurnedValuesJson);
+            var eaten = @Html.Raw(Model.EatenValuesJson);
+
+            lineChart('weightChart', 'Weight (kg)', weightLabels, weightValues, teal, 'rgba(15,157,138,0.12)');
+            lineChart('bmiChart', 'BMI', weightLabels, bmiValues, blue, 'rgba(37,99,235,0.10)');
+
+            new Chart(document.getElementById('caloriesChart'), {
+                type: 'bar',
+                data: {
+                    labels: dayLabels,
+                    datasets: [
+                        { label: 'Eaten (kcal)', data: eaten, backgroundColor: amber, borderRadius: 6 },
+                        { label: 'Burned (kcal)', data: burned, backgroundColor: green, borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true, grid: grid }, x: { grid: { display: false } } }
+                }
+            });
+        })();
+    </script>
+}
